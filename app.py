@@ -16,8 +16,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Setup SQLite database path - ensure it's in a writable directory
 if 'RENDER' in os.environ:
-    # Use the src directory on Render
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'santa.db')
+    # Use tmp directory on Render which is writable
+    db_path = '/tmp/santa.db'
 else:
     # Local development path
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'santa.db')
@@ -27,19 +27,12 @@ if 'RENDER' not in os.environ:
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-# Create tables
-with app.app_context():
-    try:
-        db.create_all()
-        app.logger.info("Database tables created successfully")
-    except Exception as e:
-        app.logger.error(f"Error creating database tables: {str(e)}")
 
 # Models
 class User(UserMixin, db.Model):
@@ -62,6 +55,23 @@ class User(UserMixin, db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Create tables before defining routes
+with app.app_context():
+    try:
+        if not os.path.exists(db_path):
+            db.create_all()
+            app.logger.info(f"Database created at {db_path}")
+        else:
+            app.logger.info(f"Database already exists at {db_path}")
+    except Exception as e:
+        app.logger.error(f"Error with database: {str(e)}")
+        # Try to create tables anyway
+        try:
+            db.create_all()
+            app.logger.info("Successfully created tables after error")
+        except Exception as e2:
+            app.logger.error(f"Failed to create tables: {str(e2)}")
 
 # Routes
 @app.route('/')
