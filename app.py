@@ -5,12 +5,23 @@ import os
 import random
 from datetime import datetime
 import json
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
-# Setup SQLite database path
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'santa.db')
+# Setup SQLite database path - ensure it's in a persistent directory on Render
+if 'RENDER' in os.environ:
+    # Use Render's persistent volume
+    db_path = os.path.join('/data', 'santa.db')
+else:
+    # Local development path
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'santa.db')
+
 os.makedirs(os.path.dirname(db_path), exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 db = SQLAlchemy(app)
@@ -20,7 +31,13 @@ login_manager.login_view = 'login'
 
 # Create tables at startup
 with app.app_context():
-    db.create_all()
+    try:
+        logger.info(f"Using database at: {db_path}")
+        db.create_all()
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {str(e)}")
+        raise
 
 # Models
 class User(UserMixin, db.Model):
