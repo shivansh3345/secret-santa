@@ -14,15 +14,18 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
-# Setup SQLite database path - ensure it's in a persistent directory on Render
+# Setup SQLite database path - ensure it's in a writable directory
 if 'RENDER' in os.environ:
-    # Use Render's persistent volume
-    db_path = os.path.join('/data', 'santa.db')
+    # Use the src directory on Render
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'santa.db')
 else:
     # Local development path
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'santa.db')
 
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
+# Only create instance directory in development
+if 'RENDER' not in os.environ:
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 db = SQLAlchemy(app)
 login_manager = LoginManager()
