@@ -183,6 +183,20 @@ def draw_names():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/reset_db/<token>')
+def reset_db(token):
+    if token != os.environ.get('RESET_TOKEN'):
+        return 'Invalid token', 403
+    
+    try:
+        # Drop all tables
+        db.drop_all()
+        # Recreate all tables
+        db.create_all()
+        return 'Database reset successfully'
+    except Exception as e:
+        return str(e), 500
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
