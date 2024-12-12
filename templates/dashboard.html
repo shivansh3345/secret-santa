@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Wishlist Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="bi bi-list-check text-danger"></i> My Wishlist
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        <i class="bi bi-info-circle"></i> Budget: ₹1000
+                    </p>
+                    <form id="wishlistForm" method="POST" action="{{ url_for('update_wishlist') }}">
+                        <div id="wishlistItems">
+                            {% if current_user.wishlist %}
+                                {% for item in current_user.wishlist_items %}
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" name="items[]" value="{{ item.name }}" placeholder="Enter gift item">
+                                    <input type="text" class="form-control" name="links[]" value="{{ item.link }}" placeholder="Add link (optional)">
+                                    <button type="button" class="btn btn-outline-danger remove-item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" name="items[]" placeholder="Enter gift item">
+                                    <input type="text" class="form-control" name="links[]" placeholder="Add link (optional)">
+                                    <button type="button" class="btn btn-outline-danger remove-item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button" class="btn btn-outline-light" onclick="addWishlistItem()">
+                                <i class="bi bi-plus-circle"></i> Add Another Item
+                            </button>
+                            <button type="submit" class="btn btn-christmas">
+                                <i class="bi bi-save"></i> Update Wishlist
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secret Santa Status Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="bi bi-gift text-danger"></i> Secret Santa Status
+                    </h2>
+                </div>
+                <div class="card-body text-center">
+                    {% if assigned_person %}
+                        <h3 class="mb-4">You are Secret Santa for:</h3>
+                        <h4 class="text-danger mb-4">{{ assigned_person.username }}</h4>
+                        
+                        <div class="wishlist-items">
+                            <h5 class="mb-3">Their Wishlist:</h5>
+                            {% if assigned_person.wishlist %}
+                                <ul class="list-unstyled">
+                                    {% for item in assigned_person.wishlist %}
+                                        <li class="mb-3">
+                                            <div>
+                                                <i class="bi bi-gift text-danger"></i> {{ item.name }}
+                                            </div>
+                                            {% if item.link %}
+                                            <div class="mt-1">
+                                                <a href="{{ item.link }}" class="text-info" target="_blank">
+                                                    <i class="bi bi-link-45deg"></i> {{ item.link }}
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-light ms-2" onclick="copyToClipboard('{{ item.link }}')">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </div>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">No items in wishlist yet.</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-gift text-danger" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3">Names haven't been drawn yet!</h4>
+                            <p>Check back later to see who you're gifting to.</p>
+                            {% if current_user.is_admin %}
+                                <button class="btn btn-christmas mt-3" onclick="drawNames()">
+                                    <i class="bi bi-shuffle"></i> Draw Names
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addWishlistItem() {
+    const itemsDiv = document.getElementById('wishlistItems');
+    const newItem = document.createElement('div');
+    newItem.className = 'input-group mb-3';
+    newItem.innerHTML = `
+        <input type="text" class="form-control" name="items[]" placeholder="Enter gift item">
+        <input type="text" class="form-control" name="links[]" placeholder="Add link (optional)">
+        <button type="button" class="btn btn-outline-danger remove-item">
+            <i class="bi bi-trash"></i>
+        </button>
+    `;
+    itemsDiv.appendChild(newItem);
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-item')) {
+        e.target.closest('.input-group').remove();
+    }
+});
+
+function drawNames() {
+    fetch('/draw_names', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Success: ' + data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error drawing names. Please try again.');
+    });
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Create and show a temporary tooltip
+        const tooltip = document.createElement('div');
+        tooltip.textContent = 'Link copied!';
+        tooltip.style.position = 'fixed';
+        tooltip.style.padding = '5px 10px';
+        tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+        tooltip.style.color = 'white';
+        tooltip.style.borderRadius = '5px';
+        tooltip.style.zIndex = '1000';
+        tooltip.style.top = (event.clientY - 30) + 'px';
+        tooltip.style.left = event.clientX + 'px';
+        
+        document.body.appendChild(tooltip);
+        
+        // Remove the tooltip after 2 seconds
+        setTimeout(() => {
+            tooltip.remove();
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card christmas-border">
+                <div class="card-body text-center">
+                    <h1 class="display-4 mb-4 text-light">
+                        <i class="bi bi-gift text-danger"></i> Appsentinels Secret Santa
+                    </h1>
+                    <p class="lead text-light">Welcome to our company's Secret Santa gift exchange!</p>
+                    <p class="text-light">Budget: ₹1000</p>
+                    <div class="mt-4">
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-christmas btn-lg">
+                                <i class="bi bi-tree-fill me-2"></i>Go to Dashboard
+                            </a>
+                        {% else %}
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{{ url_for('login') }}" class="btn btn-christmas">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                                </a>
+                                <a href="{{ url_for('register') }}" class="btn btn-christmas">
+                                    <i class="bi bi-person-plus me-2"></i>Register
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

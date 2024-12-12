@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Santa App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Add GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <style>
+        body {
+            background-color: #0a2f1f;  /* Dark forest green */
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            color: #fff;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .card-header {
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 13px 13px 0 0 !important;
+            padding: 1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .christmas-border {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .btn-christmas {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-christmas:hover {
+            background: #c82333;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .input-group .btn {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .btn-outline-danger {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-outline-danger:hover {
+            color: white;
+            background-color: #dc3545;
+        }
+
+        .btn-outline-light {
+            color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .text-light {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .text-muted {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        .alert {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .welcome-text {
+            text-align: center;
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .main-title {
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .christmas-theme {
+            background-color: #dc3545;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .gift-icon {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        /* Enhanced Snowflakes */
+        .snowflakes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .snowflake {
+            position: fixed;
+            color: #fff;
+            font-size: 1.2em;
+            text-shadow: 0 0 5px rgba(0,0,0,0.3);
+            z-index: 0;
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.8));
+        }
+
+        /* Christmas Decorations */
+        .tree-decoration {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 0;
+            transform-origin: bottom center;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        .tree-decoration img {
+            width: 200px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(40,167,69,0.3));
+        }
+
+        .reindeer-decoration {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 0;
+            transform-origin: bottom center;
+            animation: sway 4s ease-in-out infinite;
+        }
+
+        .reindeer-decoration img {
+            width: 200px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(133,100,4,0.3));
+            transform: scaleX(-1); /* Flip horizontally to face right */
+        }
+
+        .sleigh-decoration {
+            position: fixed;
+            z-index: 2;
+            bottom: 200px;
+            left: -200px; /* Start further off-screen due to image size */
+            display: flex;
+            align-items: center;
+        }
+
+        .sleigh-decoration img {
+            width: 300px;
+            height: auto;
+            filter: drop-shadow(0 0 15px rgba(220,53,69,0.5));
+        }
+
+        .christmas-lights {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                #ff0000 0px,
+                #ff0000 10px,
+                #00ff00 10px,
+                #00ff00 20px,
+                #0000ff 20px,
+                #0000ff 30px,
+                #ffff00 30px,
+                #ffff00 40px
+            );
+            animation: lights 2s linear infinite;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        @keyframes lights {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-1deg); }
+            50% { transform: rotate(1deg); }
+        }
+
+        .budget-text {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #dc3545;
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Christmas Lights -->
+    <div class="christmas-lights"></div>
+
+    <!-- Snowflakes Container -->
+    <div class="snowflakes" aria-hidden="true"></div>
+
+    <!-- Christmas Decorations -->
+    <div class="tree-decoration">
+        <img src="{{ url_for('static', filename='images/tree.png') }}" alt="Christmas Tree">
+    </div>
+    <div class="sleigh-decoration">
+        <img src="{{ url_for('static', filename='images/santa-sleigh.png') }}" alt="Santa's Sleigh">
+    </div>
+    <div class="reindeer-decoration">
+        <img src="{{ url_for('static', filename='images/reindeer.png') }}" alt="Reindeer">
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <nav class="navbar navbar-expand-lg navbar-dark christmas-theme">
+            <div class="container">
+                <a class="navbar-brand" href="{{ url_for('index') }}">
+                    <i class="fas fa-gift gift-icon"></i> Secret Santa
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        {% if current_user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('login') }}">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('register') }}">
+                                    <i class="fas fa-user-plus"></i> Register
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Create snowflakes
+        function createSnowflakes() {
+            const snowflakesContainer = document.querySelector('.snowflakes');
+            const snowflakeChars = ['❅', '❆', '❄', '✻', '✼', '❋', '❊', '❉', '❈', '❇'];
+            const numberOfSnowflakes = 50;
+
+            for (let i = 0; i < numberOfSnowflakes; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+                snowflakesContainer.appendChild(snowflake);
+
+                // Random starting position
+                const startX = Math.random() * window.innerWidth;
+                const startY = -20;
+
+                // Animation with GSAP
+                gsap.set(snowflake, { x: startX, y: startY });
+                gsap.to(snowflake, {
+                    y: window.innerHeight + 20,
+                    x: startX + (Math.random() - 0.5) * 200,
+                    rotation: Math.random() * 360,
+                    duration: 5 + Math.random() * 5,
+                    ease: "none",
+                    repeat: -1,
+                    delay: Math.random() * 5
+                });
+            }
+        }
+
+        // Simple sleigh animation
+        function moveSleigh() {
+            const sleigh = document.querySelector('.sleigh-decoration');
+            if (!sleigh) return; // Safety check
+            
+            gsap.to(sleigh, {
+                x: window.innerWidth + 300, // Move further past the right edge
+                duration: 12,
+                ease: "none",
+                repeat: -1,
+                repeatDelay: 3,
+                onRepeat: function() {
+                    gsap.set(sleigh, { x: -300 }); // Reset position further left
+                }
+            });
+
+            // Add floating motion
+            gsap.to(sleigh, {
+                y: "+=30",
+                duration: 2,
+                yoyo: true,
+                repeat: -1,
+                ease: "sine.inOut"
+            });
+        }
+
+        // Create falling presents
+        function createFallingPresents() {
+            const presents = ['🎁', '🎀', '📦'];
+            setInterval(() => {
+                const present = document.createElement('div');
+                present.className = 'falling-present';
+                present.textContent = presents[Math.floor(Math.random() * presents.length)];
+                present.style.left = Math.random() * window.innerWidth + 'px';
+                document.body.appendChild(present);
+
+                gsap.fromTo(present, 
+                    { y: -50, rotation: 0, opacity: 1 },
+                    {
+                        y: window.innerHeight + 100,
+                        rotation: Math.random() * 360,
+                        opacity: 0.7,
+                        duration: 4 + Math.random() * 3,
+                        ease: "power1.in",
+                        onComplete: () => present.remove()
+                    }
+                );
+            }, 3000);
+        }
+
+        // Create ornaments
+        function createOrnaments() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+            for (let i = 0; i < 20; i++) {
+                const ornament = document.createElement('div');
+                ornament.className = 'ornament';
+                ornament.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                document.body.appendChild(ornament);
+
+                gsap.set(ornament, {
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * (window.innerHeight * 0.7)
+                });
+
+                gsap.to(ornament, {
+                    y: '+=20',
+                    duration: 1 + Math.random(),
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "power1.inOut"
+                });
+            }
+        }
+
+        // Initialize all animations
+        document.addEventListener('DOMContentLoaded', () => {
+            createSnowflakes();
+            moveSleigh();  // Start sleigh animation
+            createFallingPresents();
+            createOrnaments();
+        });
+    </script>
+</body>
+</html>
