@@ -27,20 +27,19 @@ if 'RENDER' not in os.environ:
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Create tables at startup
+# Create tables
 with app.app_context():
     try:
-        logger.info(f"Using database at: {db_path}")
         db.create_all()
-        logger.info("Database tables created successfully")
+        app.logger.info("Database tables created successfully")
     except Exception as e:
-        logger.error(f"Error creating database tables: {str(e)}")
-        raise
+        app.logger.error(f"Error creating database tables: {str(e)}")
 
 # Models
 class User(UserMixin, db.Model):
